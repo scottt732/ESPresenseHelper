@@ -38,11 +38,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="config.sample.yaml">
+    <None Include="config.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config.sample.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="secrets.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  
+
   <Target Name="EmbedLocal" AfterTargets="MinVer" BeforeTargets="PrepareForBuild">
     <WriteLinesToFile File="$(MSBuildProjectDirectory)\VERSION" Lines="$(MinVerVersion)" Overwrite="true" />
     <ItemGroup>

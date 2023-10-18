@@ -144,9 +144,11 @@ public static class Program
 
                 services.AddSingleton<IScheduler>(Scheduler.Default);
 
-                //services.AddHostedService<HomeAssistantStateChangeMonitorService>();
-                //services.AddHostedService<HeartbeatService>();
-                //services.AddHostedService<MqttMonitorService>();
+                /*
+                services.AddHostedService<HomeAssistantStateChangeMonitorService>();
+                services.AddHostedService<HeartbeatService>();
+                services.AddHostedService<MqttMonitorService>();
+                */
 
                 services.PostConfigure<MonitorOptions>(c =>
                 {
