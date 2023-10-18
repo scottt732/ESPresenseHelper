@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ContainerBaseImage>mcr.microsoft.com/dotnet/runtime-deps:7.0.11-bookworm-slim</ContainerBaseImage>
+    <ContainerRuntimeIdentifier>linux-x64</ContainerRuntimeIdentifier>
+    <ContainerRegistry>registry.11rose.net</ContainerRegistry>
+    <ContainerImageName>espresencehelper</ContainerImageName>
+    <ContainerImageTag>latest</ContainerImageTag>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..\..\..\..</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OpenTelemetry.Exporter.Prometheus.AspNetCore" Version="1.6.0-rc.1" />
+    <PackageReference Include="OpenTelemetry.Extensions.Hosting" Version="1.6.0" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.5.1-beta.1" />
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="7.0.2" />
+    <PackageReference Include="System.Reactive" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SolutionName)' != 'HomeAutomation'">
+    <PackageReference Include="Sholo.HomeAssistant.Client" Version="*-*" />
+    <PackageReference Include="Sholo.HomeAssistant.Mqtt" Version="*-*" />
+    <PackageReference Include="Sholo.CommandLine.Containers" Version="*-*" />
+    <PackageReference Include="Sholo.Mqtt" Version="*-*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SolutionName)' == 'HomeAutomation'">
+    <ProjectReference Include="$(SmartSolutionDir)\Libraries\Sholo.HomeAssistant\Source\Sholo.HomeAssistant.Common\Sholo.HomeAssistant.Common.csproj" />
+    <ProjectReference Include="$(SmartSolutionDir)\Libraries\Sholo.HomeAssistant\Source\Sholo.HomeAssistant.Client\Sholo.HomeAssistant.Client.csproj" />
+    <ProjectReference Include="$(SmartSolutionDir)\Libraries\Sholo.HomeAssistant\Source\Sholo.HomeAssistant.Mqtt\Sholo.HomeAssistant.Mqtt.csproj" />
+    <ProjectReference Include="$(SmartSolutionDir)\Libraries\Sholo.CommandLine\Source\Sholo.CommandLine.Containers\Sholo.CommandLine.Containers.csproj" />
+    <ProjectReference Include="$(SmartSolutionDir)\Libraries\Sholo.Mqtt\Source\Sholo.Mqtt\Sholo.Mqtt.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.sample.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  
+  <Target Name="EmbedLocal" AfterTargets="MinVer" BeforeTargets="PrepareForBuild">
+    <WriteLinesToFile File="$(MSBuildProjectDirectory)\VERSION" Lines="$(MinVerVersion)" Overwrite="true" />
+    <ItemGroup>
+      <EmbeddedResource Include="$(MSBuildProjectDirectory)\VERSION">
+        <LogicalName>VERSION</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
+
+</Project>

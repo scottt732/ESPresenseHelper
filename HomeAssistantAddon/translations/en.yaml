@@ -1,0 +1,33 @@
+configuration:
+  refresh_interval:
+    name: Refresh Interval
+    description: How frequently do you want activity level sensor values computed & emitted?
+  mqtt_host:
+    name: MQTT Host
+    description: MQTT server host name
+  mqtt_port:
+    name: MQTT Port
+    description: MQTT server listening port
+  mqtt_username:
+    name: MQTT Username
+    description: Username for your MQTT server (optional)
+  mqtt_password:
+    name: MQTT Password
+    description: Password for your MQTT server (optional)
+  mqtt_use_tls:
+    name: Use TLS?
+    description: Whether or not the MQTT broker accepts TLS connections on the port specified
+  mqtt_ignore_cert_errors:
+    name: Ignore cert validation errors?
+    description: Whether or not the MQTT broker's certificate chain must be valid
+  mqtt_client_id:
+    name: MQTT Client ID
+    description: Client ID for your MQTT connection (optional)
+  mqtt_topic_root:
+    name: MQTT Topic Root
+    description: Root of MQTT topics activitylevels topic root (default=activitylevels)
+  mqtt_discovery_prefix:
+    name: MQTT Discovery Prefix
+    description: HomeAssistant's MQTT discovery prefix (default=homeassistant). Note that MQTT discovery must be enabled. See https://www.home-assistant.io/integrations/mqtt/#discovery-options
+network:
+  21210/tcp: Web server port (UI, prometheus, health checks)

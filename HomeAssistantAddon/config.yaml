@@ -1,0 +1,47 @@
+name: "Activity Levels"
+version: "0.2.41"
+slug: "activitylevels"
+description: "Track your house's activity"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+url: https://www.activitylevels.com/
+startup: services
+webui: http://[HOST]:[PORT:21210]/
+boot: auto
+ports:
+  21210/tcp: null
+hassio_role: manager
+hassio_api: true
+homeassistant_api: true
+options:
+  refresh_interval: "00:00:30"
+  mqtt_use_tls: false
+  mqtt_ignore_cert_errors: false
+  mqtt_topic_root: "activitylevels"
+  mqtt_discovery_prefix: "homeassistant"
+schema:
+  refresh_interval: "str"
+  mqtt_host: "str?"
+  mqtt_port: "int(0,65535)?"
+  mqtt_username: "str?"
+  mqtt_password: "str?"
+  mqtt_use_tls: "bool?"
+  mqtt_ignore_cert_errors: "bool?"
+  mqtt_client_id: "str?"
+  mqtt_topic_root: "str?"
+  mqtt_discovery_prefix: "str?"
+discovery:
+  - mqtt
+services:
+  - mqtt:want
+ingress_port: 21210
+ingress_entry: /
+panel_icon: mdi:brightness-auto
+panel_title: Activity Levels
+panel_admin: false
+backup: cold
+stage: experimental
+init: false
+watchdog: http://[HOST]:[PORT:21210]/healthz/ready

@@ -1,0 +1,36 @@
+FROM registry.11rose.net/activitylevels:latest AS activitylevels
+
+# ARG BUILD_FROM
+# FROM $BUILD_FROM
+FROM homeassistant/amd64-base-debian:bookworm
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    wget \
+    ca-certificates \
+    libc6 \
+    libgcc1 \
+    libgssapi-krb5-2 \
+    libicu72 \
+    libssl3 \
+    libstdc++6 \
+    zlib1g
+
+RUN wget -q https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb && \
+    dpkg -i packages-microsoft-prod.deb && \
+    rm packages-microsoft-prod.deb
+
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends aspnetcore-runtime-7.0 && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY --from=activitylevels /app /app
+COPY run.sh /
+RUN chmod a+x /run.sh
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:5000/healthz || exit 1
+
+CMD [ "/run.sh" ]
