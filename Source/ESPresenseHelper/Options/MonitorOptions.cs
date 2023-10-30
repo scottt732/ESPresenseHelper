@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace ESPresenseHelper.Options;
@@ -6,5 +7,12 @@ namespace ESPresenseHelper.Options;
 public class MonitorOptions
 {
     [Required]
-    public string MqttTopicRoot { get; set; } = "espresensehelper";
+    public string MqttTopicRoot { get; set; } = "espresense";
+
+    [Required]
+    public string HelperMqttTopicRoot { get; set; } = "espresensehelper";
+
+    public Collection<SettingsEntry> Nodes { get; } = new();
+
+    public Collection<SettingsEntry> EnrolledDevices { get; } = new();
 }

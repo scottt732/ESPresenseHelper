@@ -1,6 +1,10 @@
 using System.Reactive.Concurrency;
+using System.Reflection;
 using ESPresenseHelper.HealthChecks;
 using ESPresenseHelper.Options;
+using ESPresenseHelper.Services;
+using ESPresenseHelper.Settings;
+using ESPresenseHelper.State;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
@@ -20,6 +24,8 @@ using Sholo.HomeAssistant.Mqtt;
 using Sholo.HomeAssistant.Mqtt.Discovery;
 using Sholo.HomeAssistant.Mqtt.Discovery.Payloads;
 using Sholo.Mqtt;
+using Sholo.Mqtt.Application.Builder;
+using Sholo.Mqtt.Hosting;
 using Sholo.Mqtt.Settings;
 using Sholo.Utils;
 using Sholo.Utils.Validation;
@@ -30,10 +36,11 @@ public static class Program
 {
     public static async Task Main(string[] args)
         => await ContainerizedHostBuilder.Create<ESPresenseHelperAppOptions>(args)
+            .ConfigureMqttHost(app => { app.UseRouting(); })
             .ConfigureWebHost(builder =>
             {
                 builder.UseKestrel();
-                builder.UseUrls("http://*:21210");
+                builder.UseUrls("http://*:21211");
                 builder.UseStaticWebAssets();
 
                 builder.ConfigureServices((ctx, services) =>
@@ -131,7 +138,9 @@ public static class Program
                     return device;
                 });
 
-                services.AddMqttConsumerService("mqtt");
+                services.AddMqttConsumerService("mqtt")
+                    .AddNewtonsoftJsonPayloadConverter()
+                    .AddMqttApplicationPart(Assembly.GetExecutingAssembly());
 
                 services.AddHomeAssistant(ctx.Configuration.GetSection("homeassistant"))
                     .AddMqtt()
@@ -142,23 +151,26 @@ public static class Program
                     .ValidateDataAnnotations(true)
                     .ValidateOnStart();
 
+                services.AddSingleton<MonitorSettings>();
+
                 services.AddSingleton<IScheduler>(Scheduler.Default);
 
                 /*
                 services.AddHostedService<HomeAssistantStateChangeMonitorService>();
                 services.AddHostedService<HeartbeatService>();
-                services.AddHostedService<MqttMonitorService>();
                 */
+                services.AddHostedService<MqttMonitorService>();
 
                 services.PostConfigure<MonitorOptions>(c =>
                 {
                     var mqttTopicRoot = Environment.GetEnvironmentVariable("MQTT_TOPIC_ROOT");
-                    var activityLevelsRefreshIntervalStr = Environment.GetEnvironmentVariable("ACTIVITYLEVELS_REFRESH_INTERVAL");
-                    var activityLevelsRefreshInterval = !string.IsNullOrEmpty(activityLevelsRefreshIntervalStr) && TimeSpan.TryParse(activityLevelsRefreshIntervalStr, out var refreshInterval) ? refreshInterval : null as TimeSpan?;
+                    var mqttHelperTopicRoot = Environment.GetEnvironmentVariable("MQTT_HELPER_TOPIC_ROOT");
 
                     if (!string.IsNullOrEmpty(mqttTopicRoot)) { c.MqttTopicRoot = mqttTopicRoot; }
+                    if (!string.IsNullOrEmpty(mqttHelperTopicRoot)) { c.HelperMqttTopicRoot = mqttHelperTopicRoot; }
 
-                    c.MqttTopicRoot ??= "espresensehelper";
+                    c.MqttTopicRoot ??= "espresense";
+                    c.HelperMqttTopicRoot ??= "espresensehelper";
                 });
 
                 services.PostConfigure<HomeAssistantClientOptions>(c =>
@@ -264,12 +276,12 @@ public static class Program
                     if (mqttPendingMessagesOverflowStrategy != null) { c.PendingMessagesOverflowStrategy = mqttPendingMessagesOverflowStrategy.Value; }
                     if (mqttProtocolVersion != null) { c.MqttProtocolVersion = mqttProtocolVersion.Value; }
 
-                    c.OnlineMessage.Topic ??= "activitylevels/availability";
+                    c.OnlineMessage.Topic ??= "espresensehelper/availability";
                     c.OnlineMessage.Payload ??= "online";
                     c.OnlineMessage.QualityOfServiceLevel ??= MqttQualityOfServiceLevel.AtLeastOnce;
                     c.OnlineMessage.Retain ??= true;
 
-                    c.LastWillAndTestament.Topic ??= "activitylevels/availability";
+                    c.LastWillAndTestament.Topic ??= "espresensehelper/availability";
                     c.LastWillAndTestament.Payload ??= "offline";
                     c.LastWillAndTestament.QualityOfServiceLevel ??= MqttQualityOfServiceLevel.AtLeastOnce;
                     c.LastWillAndTestament.Retain ??= true;
@@ -291,6 +303,11 @@ public static class Program
                         .AddMeter("ESPresenseHelper")
                         .AddAspNetCoreInstrumentation()
                         .AddPrometheusExporter());
+
+                services.AddSingleton<ESPresenseState>();
+
+                services.AddHostedService<DeviceMonitorService>();
+                services.AddHostedService<DumpStateService>();
             })
             .Build()
             .RunAsync();
