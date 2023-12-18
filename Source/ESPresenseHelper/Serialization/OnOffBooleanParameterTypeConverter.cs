@@ -1,11 +1,11 @@
 using System.Text;
-using Sholo.Mqtt.TypeConverters;
+using Sholo.Mqtt.ModelBinding.TypeConverters;
 
 namespace ESPresenseHelper.Serialization;
 
-public class OnOffBooleanParameterTypeConverter : IMqttParameterTypeConverter, IMqttRequestPayloadTypeConverter
+public class OnOffBooleanParameterTypeConverter : IMqttTopicArgumentTypeConverter, IMqttPayloadTypeConverter
 {
-    public bool TryConvert(string value, Type targetType, out object result)
+    public bool TryConvertTopicArgument(string argument, Type targetType, out object result)
     {
         if (targetType != typeof(bool))
         {
@@ -13,19 +13,19 @@ public class OnOffBooleanParameterTypeConverter : IMqttParameterTypeConverter, I
             return false;
         }
 
-        if (targetType == typeof(bool?) && string.IsNullOrEmpty(value))
+        if (targetType == typeof(bool?) && string.IsNullOrEmpty(argument))
         {
             result = null!;
             return true;
         }
 
-        if (value.Equals("on", StringComparison.OrdinalIgnoreCase))
+        if (argument.Equals("on", StringComparison.OrdinalIgnoreCase))
         {
             result = true;
             return true;
         }
 
-        if (value.Equals("off", StringComparison.OrdinalIgnoreCase))
+        if (argument.Equals("off", StringComparison.OrdinalIgnoreCase))
         {
             result = false;
             return true;
@@ -35,7 +35,7 @@ public class OnOffBooleanParameterTypeConverter : IMqttParameterTypeConverter, I
         return false;
     }
 
-    public bool TryConvertPayload(ArraySegment<byte> payloadData, Type targetType, out object result)
+    public bool TryConvertPayload(ArraySegment<byte> payload, Type targetType, out object result)
     {
         if (targetType != typeof(bool))
         {
@@ -43,13 +43,13 @@ public class OnOffBooleanParameterTypeConverter : IMqttParameterTypeConverter, I
             return false;
         }
 
-        if (targetType == typeof(bool?) && payloadData.Array == null)
+        if (targetType == typeof(bool?) && payload.Array == null)
         {
             result = null!;
             return true;
         }
 
-        var value = Encoding.ASCII.GetString(payloadData.Array!, payloadData.Offset, payloadData.Count);
+        var value = Encoding.ASCII.GetString(payload.Array!, payload.Offset, payload.Count);
 
         if (value.Equals("on", StringComparison.OrdinalIgnoreCase))
         {

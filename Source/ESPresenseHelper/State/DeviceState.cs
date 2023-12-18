@@ -48,7 +48,7 @@ public partial class DeviceState : INotifyPropertyChanged
             .Select(x => x.Value)
             .ToArray();
 
-        if (ClosestNodes.Any())
+        if (ClosestNodes.Length > 0)
         {
             var bestReading = ClosestNodes
                 .FirstOrDefault();

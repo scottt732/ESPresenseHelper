@@ -2,6 +2,8 @@ using ESPresenseHelper.Models;
 using ESPresenseHelper.Serialization;
 using ESPresenseHelper.State;
 using Microsoft.Extensions.Logging;
+using Sholo.Mqtt.Controllers;
+using Sholo.Mqtt.ModelBinding.TypeConverters.Attributes;
 
 namespace ESPresenseHelper.Controllers;
 
@@ -18,7 +20,7 @@ public class RoomsController : MqttControllerBase
         Logger = logger;
     }
 
-    [Topic("espresense/rooms/+id/status", "Room")]
+    [Topic("espresense/rooms/+id/status")]
     public Task<bool> RoomStatusAsync(string id, string status)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -26,7 +28,7 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/max_distance", "MaxDistance")]
+    [Topic("espresense/rooms/+id/max_distance")]
     public Task<bool> MaxDistanceAsync(string id, float maxDistance)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -35,7 +37,7 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/absorption", "Absorption")]
+    [Topic("espresense/rooms/+id/absorption")]
     public Task<bool> AbsorptionAsync(string id, float absorption)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -44,7 +46,7 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/tx_ref_rssi", "TxRefSssi")]
+    [Topic("espresense/rooms/+id/tx_ref_rssi")]
     public Task<bool> TxRefSssiAsync(string id, float txRefRssi)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -53,7 +55,7 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/rx_adj_rssi", "RxAdjRssi")]
+    [Topic("espresense/rooms/+id/rx_adj_rssi")]
     public Task<bool> RxAdjRssiAsync(string id, float rxAdjRssi)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -62,8 +64,8 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/arduino_ota", "ArduinoOta")]
-    public Task<bool> ArduinoOtaAsync(string id, [FromMqttPayload(typeof(OnOffBooleanParameterTypeConverter))] bool arduinoOtaAdj)
+    [Topic("espresense/rooms/+id/arduino_ota")]
+    public Task<bool> ArduinoOtaAsync(string id, [FromMqttPayload<OnOffBooleanParameterTypeConverter>(serviceKey: null)] bool arduinoOtaAdj)
     {
         var roomState = State.GetOrCreateRoomById(id);
         roomState.ArduinoOta = arduinoOtaAdj;
@@ -71,8 +73,8 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/auto_update", "AutoUpdate")]
-    public Task<bool> AutoUpdateAsync(string id, [FromMqttPayload(typeof(OnOffBooleanParameterTypeConverter))] bool autoUpdate)
+    [Topic("espresense/rooms/+id/auto_update")]
+    public Task<bool> AutoUpdateAsync(string id, [FromMqttPayload<OnOffBooleanParameterTypeConverter>(serviceKey: null)] bool autoUpdate)
     {
         var roomState = State.GetOrCreateRoomById(id);
         roomState.AutoUpdate = autoUpdate;
@@ -80,8 +82,8 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/prerelease", "Prerelease")]
-    public Task<bool> PrereleaseAsync(string id, [FromMqttPayload(typeof(OnOffBooleanParameterTypeConverter))] bool prerelease)
+    [Topic("espresense/rooms/+id/prerelease")]
+    public Task<bool> PrereleaseAsync(string id, [FromMqttPayload<OnOffBooleanParameterTypeConverter>(serviceKey: null)] bool prerelease)
     {
         var roomState = State.GetOrCreateRoomById(id);
         roomState.Prerelease = prerelease;
@@ -89,7 +91,7 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/pir_timeout", "PirTimeout")]
+    [Topic("espresense/rooms/+id/pir_timeout")]
     public Task<bool> PirTimeoutAsync(string id, float pirTimeout)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -98,7 +100,7 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/radar_timeout", "RadarTimeout")]
+    [Topic("espresense/rooms/+id/radar_timeout")]
     public Task<bool> RadarTimeoutAsync(string id, float radarTimeout)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -107,7 +109,7 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/led_1", "Led1")]
+    [Topic("espresense/rooms/+id/led_1")]
     public Task<bool> Led1Async(string id, LedModel led)
     {
         var roomState = State.GetOrCreateRoomById(id);
@@ -116,8 +118,8 @@ public class RoomsController : MqttControllerBase
         return Task.FromResult(true);
     }
 
-    [Topic("espresense/rooms/+id/motion", "Motion")]
-    public Task<bool> MotionAsync(string id, [FromMqttPayload(typeof(OnOffBooleanParameterTypeConverter))] bool motion)
+    [Topic("espresense/rooms/+id/motion")]
+    public Task<bool> MotionAsync(string id, [FromMqttPayload<OnOffBooleanParameterTypeConverter>(serviceKey: null)] bool motion)
     {
         var roomState = State.GetOrCreateRoomById(id);
         roomState.Motion = motion;

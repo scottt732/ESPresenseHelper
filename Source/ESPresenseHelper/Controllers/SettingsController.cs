@@ -19,7 +19,7 @@ public class SettingsController : MqttControllerBase
         Logger = logger;
     }
 
-    [Topic("espresense/settings/+deviceId/config", "Settings")]
+    [Topic("espresense/settings/+deviceId/config")]
     public async Task<bool> SettingsAsync(
         string deviceId,
         SettingsModel settings,

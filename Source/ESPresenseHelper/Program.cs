@@ -17,16 +17,17 @@ using MQTTnet.Server;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using Sholo.CommandLine.Containers;
+using Sholo.HomeAssistant;
 using Sholo.HomeAssistant.Client;
-using Sholo.HomeAssistant.Client.Settings;
-using Sholo.HomeAssistant.DependencyInjection;
-using Sholo.HomeAssistant.Mqtt;
-using Sholo.HomeAssistant.Mqtt.Discovery;
-using Sholo.HomeAssistant.Mqtt.Discovery.Payloads;
+using Sholo.HomeAssistant.Client.Mqtt;
+using Sholo.HomeAssistant.Client.Mqtt.Devices;
+using Sholo.HomeAssistant.Client.Mqtt.Discovery;
+using Sholo.HomeAssistant.Settings;
 using Sholo.Mqtt;
-using Sholo.Mqtt.Application.Builder;
 using Sholo.Mqtt.Hosting;
+using Sholo.Mqtt.Routing;
 using Sholo.Mqtt.Settings;
+using Sholo.Mqtt.TypeConverters.NewtonsoftJson;
 using Sholo.Utils;
 using Sholo.Utils.Validation;
 
@@ -139,12 +140,12 @@ public static class Program
                 });
 
                 services.AddMqttConsumerService("mqtt")
-                    .AddNewtonsoftJsonPayloadConverter()
+                    .AddNewtonsoftJsonTypeConverter()
                     .AddMqttApplicationPart(Assembly.GetExecutingAssembly());
 
                 services.AddHomeAssistant(ctx.Configuration.GetSection("homeassistant"))
-                    .AddMqtt()
-                    .AddClient();
+                    .WithMqttClient()
+                    .WithHttpClient(c => c.AddWebSocketApiClient());
 
                 services.AddOptions<MonitorOptions>()
                     .Bind(ctx.Configuration.GetSection("monitor"))
@@ -195,7 +196,7 @@ public static class Program
                 {
                     var homeAssistantMqttDiscoveryPrefix = Environment.GetEnvironmentVariable("HA_MQTT_DISCOVERY_PREFIX");
                     var homeAssistantMqttDiscoveryQosStr = Environment.GetEnvironmentVariable("HA_MQTT_DISCOVERY_QOS");
-                    var homeAssistantMqttDiscoveryQos = !string.IsNullOrEmpty(homeAssistantMqttDiscoveryQosStr) && Enum.TryParse<MqttQualityOfServiceLevel>(homeAssistantMqttDiscoveryQosStr, out var discoQos) ? discoQos : null as MqttQualityOfServiceLevel?;
+                    var homeAssistantMqttDiscoveryQos = !string.IsNullOrEmpty(homeAssistantMqttDiscoveryQosStr) && Enum.TryParse<QualityOfServiceLevel>(homeAssistantMqttDiscoveryQosStr, out var discoQos) ? discoQos : null as QualityOfServiceLevel?;
                     var homeAssistantMqttDiscoveryRetainStr = Environment.GetEnvironmentVariable("HA_MQTT_DISCOVERY_RETAIN");
                     var homeAssistantMqttDiscoveryRetain = !string.IsNullOrEmpty(homeAssistantMqttDiscoveryRetainStr) && bool.TryParse(homeAssistantMqttDiscoveryRetainStr, out var onlineRetain) ? onlineRetain : null as bool?;
 
@@ -204,7 +205,7 @@ public static class Program
                     if (homeAssistantMqttDiscoveryRetain != null) { c.Retain = homeAssistantMqttDiscoveryRetain.Value; }
 
                     c.DiscoveryPrefix ??= "homeassistant";
-                    c.QualityOfService ??= MqttQualityOfServiceLevel.AtMostOnce;
+                    c.QualityOfService ??= QualityOfServiceLevel.AtMostOnce;
                     c.Retain ??= false;
                 });
 
@@ -254,8 +255,8 @@ public static class Program
 
                     if (mqttClientCertificatePrivateKey != null && mqttClientCertificatePublicKey != null)
                     {
-                        c.ClientCertificatePrivateKey = mqttClientCertificatePrivateKey;
-                        c.ClientCertificatePublicKey = mqttClientCertificatePublicKey;
+                        c.ClientCertificatePrivateKeyPemFile = mqttClientCertificatePrivateKey;
+                        c.ClientCertificatePublicKeyPemFile = mqttClientCertificatePublicKey;
                     }
 
                     if (mqttIgnoreCertificateValidationErorrs != null) { c.IgnoreCertificateValidationErorrs = mqttIgnoreCertificateValidationErorrs.Value; }
@@ -293,7 +294,9 @@ public static class Program
                 services.AddSingleton<ReadinessCheck>();
 
                 services.AddHealthChecks()
+#pragma warning disable CA1861
                     .AddCheck<ReadinessCheck>("Startup", tags: new[] { "ready" });
+#pragma warning restore CA1861
 
                 services.AddSingleton<IMeters>(sp => new Meters(applicationName, applicationVersion));
 

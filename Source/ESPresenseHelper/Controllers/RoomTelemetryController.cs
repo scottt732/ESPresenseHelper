@@ -42,7 +42,7 @@ public class RoomTelemetryController
         LoopStackCounter = Meters.Meter.CreateUpDownCounter<ulong>("espresence.room.loop_stack", null, "?");
     }
 
-    [Topic("espresense/rooms/+id/telemetry", "Telemtry")]
+    [Topic("espresense/rooms/+id/telemetry")]
     public Task<bool> TelemetryAsync(IMeters meters, string id, TelemetryModel telemetry)
     {
         Logger.LogDebug("Room {Id} telemetry: {Telemtry}", id, telemetry);
